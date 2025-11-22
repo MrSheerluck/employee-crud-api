@@ -1,0 +1,24 @@
+# employee_crud_api/docker-compose.yml
+
+version: "3.8"
+
+services:
+  db:
+    # Use the official Postgres image
+    image: postgres:14-alpine
+    # Map the container port 5432 to the host port 5432
+    # This allows you to connect to the DB from your host machine if needed
+    ports:
+      - "5432:5432"
+    # Set environment variables that match the Django settings
+    environment:
+      POSTGRES_DB: employee_db
+      POSTGRES_USER: employee_user
+      POSTGRES_PASSWORD: password
+    # Persist the data outside the container
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+
+volumes:
+  # Define the volume
+  postgres_data:
