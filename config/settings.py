@@ -10,7 +10,11 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
+import os
 from pathlib import Path
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -39,6 +43,8 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "rest_framework",
     "employee.apps.EmployeeConfig",
+    "django_filters",
+    "storages",
 ]
 
 MIDDLEWARE = [
@@ -77,11 +83,12 @@ WSGI_APPLICATION = "config.wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": "employee_db",
-        "USER": "employee_user",
-        "PASSWORD": "password",
-        "HOST": "localhost",
-        "PORT": "5432",
+        "NAME": os.environ.get("DB_NAME", "employee_db"),
+        "USER": os.environ.get("DB_USER", "employee_user"),
+        "PASSWORD": os.environ.get("DB_PASSWORD", "password"),
+        # **This is where the RDS Endpoint will go in production**
+        "HOST": os.environ.get("DB_HOST", "localhost"),
+        "PORT": os.environ.get("DB_PORT", "5432"),
     }
 }
 
@@ -128,5 +135,53 @@ STATIC_URL = "static/"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 
-MEDIA_ROOT = BASE_DIR / "media"
-MEDIA_URL = "/media/"
+# MEDIA_ROOT = BASE_DIR / "media"
+# MEDIA_URL = "/media/"
+
+
+# Check if AWS credentials are provided (i.e., we are in a cloud environment)
+if os.environ.get("AWS_STORAGE_BUCKET_NAME"):
+
+    # Use S3 as the default file storage
+    DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
+    STATICFILES_STORAGE = "storages.backends.s3boto3.S3StaticStorage"
+
+    # AWS Credentials (Read from .env)
+    AWS_ACCESS_KEY_ID = os.environ.get("AWS_ACCESS_KEY_ID")
+    AWS_SECRET_ACCESS_KEY = os.environ.get("AWS_SECRET_ACCESS_KEY")
+    AWS_STORAGE_BUCKET_NAME = os.environ.get("AWS_STORAGE_BUCKET_NAME")
+    AWS_S3_REGION_NAME = os.environ.get("AWS_S3_REGION_NAME", "ap-south-1")
+
+    # Define the base URL for the S3 bucket
+    AWS_S3_CUSTOM_DOMAIN = (
+        f"{AWS_STORAGE_BUCKET_NAME}.s3.{AWS_S3_REGION_NAME}.amazonaws.com"
+    )
+
+    # --- STATIC FILE Configuration ---
+    # STATICFILES_STORAGE handles this location correctly using AWS_STATIC_LOCATION
+    AWS_STATIC_LOCATION = "static"
+    STATIC_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/{AWS_STATIC_LOCATION}/"
+    STATIC_ROOT = BASE_DIR / "staticfiles"
+
+    # --- MEDIA FILE Configuration (CRITICAL CHANGES HERE) ---
+    # The default media file storage needs an explicit location defined.
+    # Set the MEDIA location inside the S3 bucket
+    AWS_LOCATION = (
+        "media"  # <--- Django-storages uses AWS_LOCATION for DEFAULT_FILE_STORAGE
+    )
+    MEDIA_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/{AWS_LOCATION}/"
+    MEDIA_ROOT = BASE_DIR / "media"  # Still needed for local management commands
+
+    AWS_S3_OBJECT_PARAMETERS = {
+        "CacheControl": "max-age=86400",
+    }
+
+else:
+    # --- Local Development Settings ---
+    # Fall back to local paths if AWS keys are not set (e.g., when running with local Docker)
+    STATIC_URL = "static/"
+    MEDIA_URL = "/media/"
+    MEDIA_ROOT = BASE_DIR / "media"
+    STATIC_ROOT = BASE_DIR / "staticfiles"
+
+# --- END AWS S3 Settings ---
