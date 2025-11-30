@@ -1,0 +1,1082 @@
+<!DOCTYPE html>
+<html ng-app="employeeApp">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Employee Management System</title>
+
+    <!-- AngularJS CDN -->
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
+
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        font-family: Arial, sans-serif;
+        padding: 20px;
+        background: #f5f5f5;
+      }
+      .container {
+        max-width: 1400px;
+        margin: 0 auto;
+        background: white;
+        padding: 20px;
+        border-radius: 5px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      }
+      h1 {
+        margin-bottom: 20px;
+        color: #333;
+      }
+
+      /* Controls Section */
+      .controls {
+        margin-bottom: 20px;
+        padding: 15px;
+        background: #f9f9f9;
+        border-radius: 5px;
+      }
+      .controls input,
+      .controls select,
+      .controls button {
+        padding: 8px 12px;
+        margin: 5px;
+        border: 1px solid #ddd;
+        border-radius: 3px;
+      }
+      .controls input[type="text"],
+      .controls input[type="date"],
+      .controls input[type="number"],
+      .controls select {
+        min-width: 150px;
+      }
+      .controls button {
+        background: #007bff;
+        color: white;
+        cursor: pointer;
+        border: none;
+      }
+      .controls button:hover {
+        background: #0056b3;
+      }
+      .controls button.secondary {
+        background: #28a745;
+      }
+      .controls button.secondary:hover {
+        background: #218838;
+      }
+      .controls button.danger {
+        background: #dc3545;
+      }
+      .controls button.danger:hover {
+        background: #c82333;
+      }
+
+      /* Form Section */
+      .form-section {
+        margin-bottom: 20px;
+        padding: 15px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        background: #fafafa;
+      }
+      .form-section h3 {
+        margin-bottom: 15px;
+        color: #555;
+      }
+      .form-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 10px;
+        margin-bottom: 10px;
+      }
+      .form-group {
+        display: flex;
+        flex-direction: column;
+      }
+      .form-group label {
+        margin-bottom: 5px;
+        font-weight: bold;
+        color: #555;
+        font-size: 14px;
+      }
+      .form-group input,
+      .form-group select {
+        padding: 8px;
+        border: 1px solid #ddd;
+        border-radius: 3px;
+      }
+      .form-group input:invalid {
+        border-color: #dc3545;
+      }
+      .form-group input:valid {
+        border-color: #28a745;
+      }
+      .form-group input:focus {
+        outline: none;
+        border-color: #007bff;
+      }
+      .form-actions {
+        margin-top: 15px;
+      }
+      .form-actions button {
+        margin-right: 10px;
+      }
+
+      /* Table */
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+      }
+      th,
+      td {
+        padding: 12px;
+        text-align: left;
+        border-bottom: 1px solid #ddd;
+      }
+      th {
+        background: #f8f9fa;
+        font-weight: bold;
+        color: #333;
+        cursor: pointer;
+        user-select: none;
+      }
+      th:hover {
+        background: #e9ecef;
+      }
+      th.sortable::after {
+        content: " ↕";
+        color: #999;
+      }
+      th.sorted-asc::after {
+        content: " ↑";
+        color: #007bff;
+      }
+      th.sorted-desc::after {
+        content: " ↓";
+        color: #007bff;
+      }
+      tr:hover {
+        background: #f8f9fa;
+      }
+      td img {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        object-fit: cover;
+      }
+
+      /* Action buttons in table */
+      .action-btn {
+        padding: 5px 10px;
+        margin: 0 3px;
+        cursor: pointer;
+        border: none;
+        border-radius: 3px;
+        font-size: 12px;
+      }
+      .btn-edit {
+        background: #ffc107;
+        color: #000;
+      }
+      .btn-delete {
+        background: #dc3545;
+        color: white;
+      }
+      .btn-edit:hover {
+        background: #e0a800;
+      }
+      .btn-delete:hover {
+        background: #c82333;
+      }
+
+      /* Pagination */
+      .pagination {
+        margin-top: 20px;
+        text-align: center;
+      }
+      .pagination button {
+        padding: 8px 12px;
+        margin: 0 3px;
+        border: 1px solid #ddd;
+        background: white;
+        cursor: pointer;
+        border-radius: 3px;
+      }
+      .pagination button:hover {
+        background: #f0f0f0;
+      }
+      .pagination button.active {
+        background: #007bff;
+        color: white;
+        border-color: #007bff;
+      }
+      .pagination button:disabled {
+        cursor: not-allowed;
+        opacity: 0.5;
+      }
+      .pagination-info {
+        margin: 10px 0;
+        color: #666;
+      }
+
+      /* Alert messages */
+      .alert {
+        padding: 12px;
+        margin: 10px 0;
+        border-radius: 3px;
+      }
+      .alert-success {
+        background: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+      }
+      .alert-error {
+        background: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+      }
+
+      /* Stats */
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 15px;
+        margin-bottom: 20px;
+      }
+      .stat-card {
+        padding: 15px;
+        background: #f8f9fa;
+        border-radius: 5px;
+        text-align: center;
+        border: 1px solid #dee2e6;
+      }
+      .stat-card .number {
+        font-size: 24px;
+        font-weight: bold;
+        color: #007bff;
+      }
+      .stat-card .label {
+        font-size: 14px;
+        color: #666;
+        margin-top: 5px;
+      }
+
+      /* Loading */
+      .loading {
+        text-align: center;
+        padding: 20px;
+        color: #666;
+      }
+
+      /* Hide form initially */
+      .form-section.hidden {
+        display: none;
+      }
+    </style>
+  </head>
+  <body ng-controller="EmployeeController">
+    <div class="container">
+      <h1>Employee Management System</h1>
+
+      <!-- Alert Messages -->
+      <div class="alert alert-success" ng-show="successMessage">
+        {{ successMessage }}
+      </div>
+      <div class="alert alert-error" ng-show="errorMessage">
+        {{ errorMessage }}
+      </div>
+
+      <!-- Statistics -->
+      <div class="stats">
+        <div class="stat-card">
+          <div class="number">{{ totalEmployees }}</div>
+          <div class="label">Total Employees</div>
+        </div>
+        <div class="stat-card">
+          <div class="number">{{ departments.length }}</div>
+          <div class="label">Departments</div>
+        </div>
+        <div class="stat-card">
+          <div class="number">{{ positions.length }}</div>
+          <div class="label">Positions</div>
+        </div>
+      </div>
+
+      <!-- Controls: Search, Filter, Sort, Export -->
+      <div class="controls">
+        <input
+          type="text"
+          ng-model="filters.search"
+          placeholder="Search by name, email, position..."
+          ng-change="applyFilters()"
+        />
+
+        <select ng-model="filters.department" ng-change="applyFilters()">
+          <option value="">All Departments</option>
+          <option ng-repeat="dept in departments" value="{{ dept }}">
+            {{ dept }}
+          </option>
+        </select>
+
+        <select ng-model="filters.position" ng-change="applyFilters()">
+          <option value="">All Positions</option>
+          <option ng-repeat="pos in positions" value="{{ pos }}">
+            {{ pos }}
+          </option>
+        </select>
+
+        <select ng-model="filters.ordering" ng-change="applyFilters()">
+          <option value="">Sort By...</option>
+          <option value="last_name">Last Name (A-Z)</option>
+          <option value="-last_name">Last Name (Z-A)</option>
+          <option value="hire_date">Hire Date (Old First)</option>
+          <option value="-hire_date">Hire Date (New First)</option>
+          <option value="salary">Salary (Low to High)</option>
+          <option value="-salary">Salary (High to Low)</option>
+        </select>
+
+        <select
+          ng-model="pageSize"
+          ng-change="changePageSize()"
+          title="Items per page"
+        >
+          <option ng-repeat="size in pageSizeOptions" value="{{ size }}">
+            {{ size }} per page
+          </option>
+        </select>
+
+        <button ng-click="clearFilters()">Clear Filters</button>
+        <button class="secondary" ng-click="toggleForm()">
+          {{ formVisible ? 'Hide Form' : 'Add Employee' }}
+        </button>
+        <button class="secondary" ng-click="exportToPDF()">Export PDF</button>
+        <button class="secondary" ng-click="exportToExcel()">
+          Export Excel
+        </button>
+      </div>
+
+      <!-- Add/Edit Employee Form -->
+      <div class="form-section" ng-class="{'hidden': !formVisible}">
+        <h3>{{ editMode ? 'Edit Employee' : 'Add New Employee' }}</h3>
+        <form name="employeeForm" ng-submit="saveEmployee()">
+          <div class="form-row">
+            <div class="form-group">
+              <label>First Name *</label>
+              <input
+                type="text"
+                ng-model="currentEmployee.first_name"
+                required
+                minlength="2"
+                maxlength="100"
+                placeholder="Enter first name"
+              />
+            </div>
+            <div class="form-group">
+              <label>Last Name *</label>
+              <input
+                type="text"
+                ng-model="currentEmployee.last_name"
+                required
+                minlength="2"
+                maxlength="100"
+                placeholder="Enter last name"
+              />
+            </div>
+            <div class="form-group">
+              <label>Email *</label>
+              <input
+                type="email"
+                ng-model="currentEmployee.email"
+                required
+                maxlength="254"
+                placeholder="employee@example.com"
+              />
+            </div>
+            <div class="form-group">
+              <label>Phone Number</label>
+              <input
+                type="tel"
+                ng-model="currentEmployee.phone_number"
+                maxlength="20"
+                placeholder="+91-9876543210"
+              />
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Position *</label>
+              <input
+                type="text"
+                ng-model="currentEmployee.position"
+                required
+                maxlength="100"
+                placeholder="e.g., Software Engineer"
+              />
+            </div>
+            <div class="form-group">
+              <label>Department *</label>
+              <input
+                type="text"
+                ng-model="currentEmployee.department"
+                required
+                maxlength="100"
+                placeholder="e.g., Technology"
+              />
+            </div>
+            <div class="form-group">
+              <label>Hire Date *</label>
+              <input
+                type="date"
+                ng-model="currentEmployee.hire_date"
+                required
+                max="{{ today }}"
+                min="1950-01-01"
+              />
+            </div>
+            <div class="form-group">
+              <label>Salary (₹) *</label>
+              <input
+                type="number"
+                step="0.01"
+                min="0"
+                max="10000000"
+                ng-model="currentEmployee.salary"
+                required
+                placeholder="e.g., 85000.00"
+              />
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Profile Image (JPG, PNG, GIF - Max 5MB)</label>
+              <input
+                type="file"
+                id="profileImage"
+                accept="image/jpeg,image/jpg,image/png,image/gif"
+              />
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button type="submit" ng-disabled="employeeForm.$invalid">
+              {{ editMode ? 'Update' : 'Create' }}
+            </button>
+            <button type="button" class="danger" ng-click="cancelEdit()">
+              Cancel
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Loading State -->
+      <div class="loading" ng-show="loading">Loading employees...</div>
+
+      <!-- Employee Table -->
+      <table ng-show="!loading">
+        <thead>
+          <tr>
+            <th>Photo</th>
+            <th
+              class="sortable"
+              ng-click="sortBy('first_name')"
+              ng-class="getSortClass('first_name')"
+            >
+              First Name
+            </th>
+            <th
+              class="sortable"
+              ng-click="sortBy('last_name')"
+              ng-class="getSortClass('last_name')"
+            >
+              Last Name
+            </th>
+            <th
+              class="sortable"
+              ng-click="sortBy('email')"
+              ng-class="getSortClass('email')"
+            >
+              Email
+            </th>
+            <th>Phone</th>
+            <th
+              class="sortable"
+              ng-click="sortBy('position')"
+              ng-class="getSortClass('position')"
+            >
+              Position
+            </th>
+            <th
+              class="sortable"
+              ng-click="sortBy('department')"
+              ng-class="getSortClass('department')"
+            >
+              Department
+            </th>
+            <th
+              class="sortable"
+              ng-click="sortBy('hire_date')"
+              ng-class="getSortClass('hire_date')"
+            >
+              Hire Date
+            </th>
+            <th
+              class="sortable"
+              ng-click="sortBy('salary')"
+              ng-class="getSortClass('salary')"
+            >
+              Salary
+            </th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr ng-repeat="employee in employees">
+            <td>
+              <img
+                ng-src="{{ employee.profile_image || 'https://via.placeholder.com/50' }}"
+                alt="Profile"
+              />
+            </td>
+            <td>{{ employee.first_name }}</td>
+            <td>{{ employee.last_name }}</td>
+            <td>{{ employee.email }}</td>
+            <td>{{ employee.phone_number || 'N/A' }}</td>
+            <td>{{ employee.position }}</td>
+            <td>{{ employee.department }}</td>
+            <td>{{ employee.hire_date | date:'MMM dd, yyyy' }}</td>
+            <td>₹{{ employee.salary | number:2 }}</td>
+            <td>
+              <button
+                class="action-btn btn-edit"
+                ng-click="editEmployee(employee)"
+              >
+                Edit
+              </button>
+              <button
+                class="action-btn btn-delete"
+                ng-click="deleteEmployee(employee.id)"
+              >
+                Delete
+              </button>
+            </td>
+          </tr>
+          <tr ng-show="employees.length === 0">
+            <td
+              colspan="10"
+              style="text-align: center; padding: 30px; color: #999"
+            >
+              No employees found. Click "Add Employee" to create one.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- Pagination -->
+      <div class="pagination" ng-show="!loading && totalEmployees > 0">
+        <div class="pagination-info">
+          Showing {{ (currentPage - 1) * pageSize + 1 }} to {{
+          Math.min(currentPage * pageSize, totalEmployees) }} of {{
+          totalEmployees }} employees (Page {{ currentPage }} of {{ totalPages
+          }})
+        </div>
+        <button ng-click="goToPage(1)" ng-disabled="currentPage === 1">
+          First
+        </button>
+        <button
+          ng-click="goToPage(currentPage - 1)"
+          ng-disabled="currentPage === 1"
+        >
+          Previous
+        </button>
+        <button
+          ng-repeat="page in getPageNumbers()"
+          ng-click="goToPage(page)"
+          ng-class="{'active': page === currentPage}"
+        >
+          {{ page }}
+        </button>
+        <button
+          ng-click="goToPage(currentPage + 1)"
+          ng-disabled="currentPage === totalPages"
+        >
+          Next
+        </button>
+        <button
+          ng-click="goToPage(totalPages)"
+          ng-disabled="currentPage === totalPages"
+        >
+          Last
+        </button>
+      </div>
+    </div>
+
+    <script>
+      // AngularJS Application
+      var app = angular.module("employeeApp", []);
+
+      app.controller("EmployeeController", function ($scope, $http, $timeout) {
+        // Configuration
+        $scope.API_BASE = "http://13.233.117.239/api/employees/";
+
+        // Add Math to scope for use in templates
+        $scope.Math = window.Math;
+
+        // State
+        $scope.employees = [];
+        $scope.departments = [];
+        $scope.positions = [];
+        $scope.totalEmployees = 0;
+        $scope.currentPage = 1;
+        $scope.totalPages = 1;
+        $scope.pageSize = 10; // Default page size
+        $scope.pageSizeOptions = [5, 10, 20, 50, 100]; // Available options
+        $scope.loading = false;
+        $scope.formVisible = false;
+        $scope.editMode = false;
+        $scope.currentEmployee = {};
+        $scope.successMessage = "";
+        $scope.errorMessage = "";
+
+        // Filters
+        $scope.filters = {
+          search: "",
+          department: "",
+          position: "",
+          ordering: "",
+        };
+
+        // Initialize
+        $scope.init = function () {
+          // Set today's date for validation
+          var today = new Date();
+          $scope.today = today.toISOString().split("T")[0];
+
+          $scope.loadEmployees();
+        };
+
+        // Load employees with filters and pagination
+        $scope.loadEmployees = function () {
+          $scope.loading = true;
+          var params = {
+            page: $scope.currentPage,
+            page_size: $scope.pageSize,
+          };
+
+          if ($scope.filters.search) params.search = $scope.filters.search;
+          if ($scope.filters.department)
+            params.department = $scope.filters.department;
+          if ($scope.filters.position)
+            params.position = $scope.filters.position;
+          if ($scope.filters.ordering)
+            params.ordering = $scope.filters.ordering;
+
+          $http
+            .get($scope.API_BASE, { params: params })
+            .then(function (response) {
+              $scope.employees = response.data.results;
+              $scope.totalEmployees = response.data.count;
+              $scope.totalPages = Math.ceil(
+                $scope.totalEmployees / $scope.pageSize
+              );
+              $scope.loading = false;
+              $scope.extractMetadata();
+            })
+            .catch(function (error) {
+              $scope.showError("Failed to load employees");
+              $scope.loading = false;
+            });
+        };
+
+        // Extract unique departments and positions
+        $scope.extractMetadata = function () {
+          var deptSet = new Set();
+          var posSet = new Set();
+          $scope.employees.forEach(function (emp) {
+            deptSet.add(emp.department);
+            posSet.add(emp.position);
+          });
+          $scope.departments = Array.from(deptSet).sort();
+          $scope.positions = Array.from(posSet).sort();
+        };
+
+        // Apply filters
+        $scope.applyFilters = function () {
+          $scope.currentPage = 1;
+          $scope.loadEmployees();
+        };
+
+        // Clear all filters
+        $scope.clearFilters = function () {
+          $scope.filters = {
+            search: "",
+            department: "",
+            position: "",
+            ordering: "",
+          };
+          $scope.applyFilters();
+        };
+
+        // Sorting
+        $scope.sortBy = function (field) {
+          if ($scope.filters.ordering === field) {
+            $scope.filters.ordering = "-" + field;
+          } else {
+            $scope.filters.ordering = field;
+          }
+          $scope.applyFilters();
+        };
+
+        $scope.getSortClass = function (field) {
+          if ($scope.filters.ordering === field) return "sortable sorted-asc";
+          if ($scope.filters.ordering === "-" + field)
+            return "sortable sorted-desc";
+          return "sortable";
+        };
+
+        // Pagination
+        $scope.goToPage = function (page) {
+          if (page < 1 || page > $scope.totalPages) return;
+          $scope.currentPage = page;
+          $scope.loadEmployees();
+        };
+
+        $scope.changePageSize = function () {
+          $scope.currentPage = 1; // Reset to first page when changing page size
+          $scope.loadEmployees();
+        };
+
+        $scope.getPageNumbers = function () {
+          var pages = [];
+          var start = Math.max(1, $scope.currentPage - 2);
+          var end = Math.min($scope.totalPages, $scope.currentPage + 2);
+          for (var i = start; i <= end; i++) {
+            pages.push(i);
+          }
+          return pages;
+        };
+
+        // Form operations
+        $scope.toggleForm = function () {
+          $scope.formVisible = !$scope.formVisible;
+          if (!$scope.formVisible) {
+            $scope.cancelEdit();
+          }
+        };
+
+        $scope.editEmployee = function (employee) {
+          $scope.editMode = true;
+          $scope.formVisible = true;
+          $scope.currentEmployee = angular.copy(employee);
+          window.scrollTo(0, 0);
+        };
+
+        $scope.cancelEdit = function () {
+          $scope.editMode = false;
+          $scope.currentEmployee = {};
+          $scope.formVisible = false;
+          document.getElementById("profileImage").value = "";
+        };
+
+        // Format date to YYYY-MM-DD
+        $scope.formatDate = function (date) {
+          if (!date) return null;
+          if (typeof date === "string") return date;
+          var d = new Date(date);
+          var month = "" + (d.getMonth() + 1);
+          var day = "" + d.getDate();
+          var year = d.getFullYear();
+          if (month.length < 2) month = "0" + month;
+          if (day.length < 2) day = "0" + day;
+          return [year, month, day].join("-");
+        };
+
+        // Client-side validation
+        $scope.validateEmployee = function () {
+          var errors = [];
+
+          // Required fields
+          if (
+            !$scope.currentEmployee.first_name ||
+            $scope.currentEmployee.first_name.trim() === ""
+          ) {
+            errors.push("First name is required");
+          }
+          if (
+            !$scope.currentEmployee.last_name ||
+            $scope.currentEmployee.last_name.trim() === ""
+          ) {
+            errors.push("Last name is required");
+          }
+          if (
+            !$scope.currentEmployee.email ||
+            $scope.currentEmployee.email.trim() === ""
+          ) {
+            errors.push("Email is required");
+          }
+          if (
+            !$scope.currentEmployee.position ||
+            $scope.currentEmployee.position.trim() === ""
+          ) {
+            errors.push("Position is required");
+          }
+          if (
+            !$scope.currentEmployee.department ||
+            $scope.currentEmployee.department.trim() === ""
+          ) {
+            errors.push("Department is required");
+          }
+          if (!$scope.currentEmployee.hire_date) {
+            errors.push("Hire date is required");
+          }
+          if (!$scope.currentEmployee.salary) {
+            errors.push("Salary is required");
+          }
+
+          // Email format validation
+          if ($scope.currentEmployee.email) {
+            var emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test($scope.currentEmployee.email)) {
+              errors.push("Please enter a valid email address");
+            }
+          }
+
+          // Phone number validation (if provided)
+          if (
+            $scope.currentEmployee.phone_number &&
+            $scope.currentEmployee.phone_number.trim() !== ""
+          ) {
+            var phoneRegex = /^[\d\s\-\+\(\)]+$/;
+            if (!phoneRegex.test($scope.currentEmployee.phone_number)) {
+              errors.push("Please enter a valid phone number");
+            }
+          }
+
+          // Salary validation
+          if ($scope.currentEmployee.salary) {
+            var salary = parseFloat($scope.currentEmployee.salary);
+            if (isNaN(salary) || salary < 0) {
+              errors.push("Salary must be a positive number");
+            }
+            if (salary > 10000000) {
+              errors.push("Salary seems unreasonably high");
+            }
+          }
+
+          // Date validation
+          if ($scope.currentEmployee.hire_date) {
+            var hireDate = new Date($scope.currentEmployee.hire_date);
+            var today = new Date();
+            if (hireDate > today) {
+              errors.push("Hire date cannot be in the future");
+            }
+            var minDate = new Date("1950-01-01");
+            if (hireDate < minDate) {
+              errors.push("Hire date seems too old");
+            }
+          }
+
+          return errors;
+        };
+
+        // Save employee (create or update)
+        $scope.saveEmployee = function () {
+          // Validate before saving
+          var validationErrors = $scope.validateEmployee();
+          if (validationErrors.length > 0) {
+            $scope.showError(
+              "Validation errors: " + validationErrors.join(", ")
+            );
+            return;
+          }
+
+          var formData = new FormData();
+          var fileInput = document.getElementById("profileImage");
+
+          // Append all employee data with proper formatting
+          Object.keys($scope.currentEmployee).forEach(function (key) {
+            if (key !== "profile_image" && $scope.currentEmployee[key]) {
+              var value = $scope.currentEmployee[key];
+
+              // Format date properly
+              if (key === "hire_date") {
+                value = $scope.formatDate(value);
+              }
+
+              formData.append(key, value);
+            }
+          });
+
+          // Append file if selected
+          if (fileInput.files.length > 0) {
+            // Validate file type
+            var file = fileInput.files[0];
+            var validTypes = [
+              "image/jpeg",
+              "image/jpg",
+              "image/png",
+              "image/gif",
+            ];
+            if (!validTypes.includes(file.type)) {
+              $scope.showError(
+                "Please upload a valid image file (JPG, PNG, or GIF)"
+              );
+              return;
+            }
+            // Validate file size (max 5MB)
+            if (file.size > 5 * 1024 * 1024) {
+              $scope.showError("Image file size must be less than 5MB");
+              return;
+            }
+            formData.append("profile_image", file);
+          }
+
+          var request;
+          if ($scope.editMode) {
+            // Update existing employee
+            request = $http.put(
+              $scope.API_BASE + $scope.currentEmployee.id + "/",
+              formData,
+              {
+                headers: { "Content-Type": undefined },
+                transformRequest: angular.identity,
+              }
+            );
+          } else {
+            // Create new employee
+            request = $http.post($scope.API_BASE, formData, {
+              headers: { "Content-Type": undefined },
+              transformRequest: angular.identity,
+            });
+          }
+
+          request
+            .then(function (response) {
+              $scope.showSuccess(
+                $scope.editMode
+                  ? "Employee updated successfully"
+                  : "Employee created successfully"
+              );
+              $scope.cancelEdit();
+              $scope.loadEmployees();
+            })
+            .catch(function (error) {
+              var errorMsg = "Failed to save employee";
+              if (error.data) {
+                if (typeof error.data === "object") {
+                  var errors = [];
+                  Object.keys(error.data).forEach(function (key) {
+                    errors.push(key + ": " + error.data[key]);
+                  });
+                  errorMsg += " - " + errors.join(", ");
+                } else {
+                  errorMsg += " - " + error.data;
+                }
+              }
+              $scope.showError(errorMsg);
+            });
+        };
+
+        // Delete employee
+        $scope.deleteEmployee = function (id) {
+          if (!confirm("Are you sure you want to delete this employee?"))
+            return;
+
+          $http
+            .delete($scope.API_BASE + id + "/")
+            .then(function (response) {
+              $scope.showSuccess("Employee deleted successfully");
+              $scope.loadEmployees();
+            })
+            .catch(function (error) {
+              $scope.showError("Failed to delete employee");
+            });
+        };
+
+        // Export to PDF (backend)
+        $scope.exportToPDF = function () {
+          // Build URL with current filters
+          var params = [];
+          if ($scope.filters.search)
+            params.push("search=" + encodeURIComponent($scope.filters.search));
+          if ($scope.filters.department)
+            params.push(
+              "department=" + encodeURIComponent($scope.filters.department)
+            );
+          if ($scope.filters.position)
+            params.push(
+              "position=" + encodeURIComponent($scope.filters.position)
+            );
+          if ($scope.filters.ordering)
+            params.push(
+              "ordering=" + encodeURIComponent($scope.filters.ordering)
+            );
+
+          var url = $scope.API_BASE + "export_pdf/";
+          if (params.length > 0) {
+            url += "?" + params.join("&");
+          }
+
+          // Open in new window to trigger download
+          window.open(url, "_blank");
+          $scope.showSuccess("PDF export started - check your downloads");
+        };
+
+        // Export to Excel (backend)
+        $scope.exportToExcel = function () {
+          // Build URL with current filters
+          var params = [];
+          if ($scope.filters.search)
+            params.push("search=" + encodeURIComponent($scope.filters.search));
+          if ($scope.filters.department)
+            params.push(
+              "department=" + encodeURIComponent($scope.filters.department)
+            );
+          if ($scope.filters.position)
+            params.push(
+              "position=" + encodeURIComponent($scope.filters.position)
+            );
+          if ($scope.filters.ordering)
+            params.push(
+              "ordering=" + encodeURIComponent($scope.filters.ordering)
+            );
+
+          var url = $scope.API_BASE + "export_excel/";
+          if (params.length > 0) {
+            url += "?" + params.join("&");
+          }
+
+          // Open in new window to trigger download
+          window.open(url, "_blank");
+          $scope.showSuccess("Excel export started - check your downloads");
+        };
+
+        // Alert messages
+        $scope.showSuccess = function (message) {
+          $scope.successMessage = message;
+          $scope.errorMessage = "";
+          $timeout(function () {
+            $scope.successMessage = "";
+          }, 3000);
+        };
+
+        $scope.showError = function (message) {
+          $scope.errorMessage = message;
+          $scope.successMessage = "";
+          $timeout(function () {
+            $scope.errorMessage = "";
+          }, 5000);
+        };
+
+        // Initialize on load
+        $scope.init();
+      });
+    </script>
+  </body>
+</html>
